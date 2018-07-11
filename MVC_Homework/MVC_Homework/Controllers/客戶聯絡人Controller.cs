@@ -17,7 +17,7 @@ namespace MVC_Homework.Controllers
         [HttpPost]
         public ActionResult Search(string 姓名)
         {
-            var 客戶聯絡人Items = db.客戶聯絡人.AsQueryable();
+            var 客戶聯絡人Items = db.客戶聯絡人.Where(o => o.是否已刪除 != true).AsQueryable();
 
             if (!string.IsNullOrEmpty(姓名))
             {
@@ -31,7 +31,7 @@ namespace MVC_Homework.Controllers
         public ActionResult Index()
         {
             var 客戶聯絡人 = db.客戶聯絡人.Include(客 => 客.客戶資料);
-            return View(客戶聯絡人.ToList());
+            return View(客戶聯絡人.Where(o => o.是否已刪除 != true).ToList());
         }
 
         // GET: 客戶聯絡人/Details/5

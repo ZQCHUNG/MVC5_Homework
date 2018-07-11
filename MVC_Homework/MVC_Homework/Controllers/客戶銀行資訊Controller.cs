@@ -18,7 +18,7 @@ namespace MVC_Homework.Controllers
         [HttpPost]
         public ActionResult Search(string 銀行名稱)
         {
-            var 客戶銀行資訊Items = db.客戶銀行資訊.AsQueryable();
+            var 客戶銀行資訊Items = db.客戶銀行資訊.Where(o => o.是否已刪除 != true).AsQueryable();
 
             if (!string.IsNullOrEmpty(銀行名稱))
             {
@@ -32,7 +32,7 @@ namespace MVC_Homework.Controllers
         public ActionResult Index()
         {
             var 客戶銀行資訊 = db.客戶銀行資訊.Include(客 => 客.客戶資料);
-            return View(客戶銀行資訊.ToList());
+            return View(客戶銀行資訊.Where(o => o.是否已刪除 != true).ToList());
         }
 
         // GET: 客戶銀行資訊/Details/5

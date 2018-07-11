@@ -14,25 +14,25 @@ namespace MVC_Homework.Controllers
     {
         private 客戶資料Entities db = new 客戶資料Entities();
 
+        客戶資料Repository repo = RepositoryHelper.Get客戶資料Repository();
 
         [HttpPost]
         public ActionResult Search(string 客戶名稱)
         {
-            var 客戶資料Items = db.客戶資料.AsQueryable();
+            var 客戶資料Items = repo.All().Where(o => o.是否已刪除 != true);
 
             if (!string.IsNullOrEmpty(客戶名稱))
             {
-                客戶資料Items = 客戶資料Items.Where(o => o.客戶名稱 == 客戶名稱);
+                客戶資料Items = 客戶資料Items.Where(o => o.客戶名稱 == 客戶名稱 );
             }
 
             return View("Index",客戶資料Items);
         }
 
-
         // GET: 客戶資料
         public ActionResult Index()
         {
-            return View(db.客戶資料.ToList());
+            return View(db.客戶資料.Where(o=> o.是否已刪除 != true).ToList());
         }
 
         // GET: 客戶資料/Details/5

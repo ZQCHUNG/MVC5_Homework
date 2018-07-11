@@ -4,7 +4,13 @@
     ViewBag.Title = "Index";
 }
 
+
 <h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
 
 @using (Html.BeginForm("Search", "客戶銀行資訊", FormMethod.Post, null))
 {
@@ -13,9 +19,6 @@
 }
 <hr />
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
 <table class="table">
     <tr>
         <th>
