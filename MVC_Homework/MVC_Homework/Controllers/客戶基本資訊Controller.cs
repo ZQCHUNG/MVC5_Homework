@@ -11,7 +11,7 @@ namespace MVC_Homework.Controllers
     public class 客戶基本資訊Controller : Controller
     {
         private 客戶資料Entities db = new 客戶資料Entities();
-
+        
         // GET: 客戶基本資訊
         public ActionResult Index()
         {

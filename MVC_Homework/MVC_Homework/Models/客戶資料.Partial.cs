@@ -7,6 +7,7 @@ namespace MVC_Homework.Models
     [MetadataType(typeof(客戶資料MetaData))]
     public partial class 客戶資料
     {
+        public string 客戶分類 { get; set; }
     }
     
     public partial class 客戶資料MetaData
@@ -36,6 +37,7 @@ namespace MVC_Homework.Models
         [EmailAddress]
         [StringLength(250, ErrorMessage="欄位長度不得大於 250 個字元")]
         public string Email { get; set; }
+        
 
         public Nullable<bool> 是否已刪除 { get; set; }
 

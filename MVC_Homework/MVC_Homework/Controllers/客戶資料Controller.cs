@@ -6,25 +6,28 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.UI.WebControls;
 using MVC_Homework.Models;
 
 namespace MVC_Homework.Controllers
 {
     public class 客戶資料Controller : Controller
     {
-        private 客戶資料Entities db = new 客戶資料Entities();
+        //private 客戶資料Entities db = new 客戶資料Entities();
 
         客戶資料Repository repo = RepositoryHelper.Get客戶資料Repository();
 
         [HttpPost]
-        public ActionResult Search(string 客戶名稱)
+        public ActionResult Search(string 客戶名稱,string 客戶分類)
         {
-            var 客戶資料Items = repo.All().Where(o => o.是否已刪除 != true);
+            var 客戶資料Items = repo.Find(客戶名稱);
 
-            if (!string.IsNullOrEmpty(客戶名稱))
+            if (客戶資料Items != null && 客戶資料Items.Count() > 0)
             {
-                客戶資料Items = 客戶資料Items.Where(o => o.客戶名稱 == 客戶名稱 );
+                客戶資料Items = repo.Find(客戶資料Items, 客戶分類);
             }
+
+            addItemList();
 
             return View("Index",客戶資料Items);
         }
@@ -32,7 +35,42 @@ namespace MVC_Homework.Controllers
         // GET: 客戶資料
         public ActionResult Index()
         {
-            return View(db.客戶資料.Where(o=> o.是否已刪除 != true).ToList());
+            var items = repo.All();
+
+            foreach(var obj in items)
+            {
+                if(obj.地址.Contains("台北"))
+                {
+                    obj.客戶分類 = "天龍人";
+                }
+                else
+                {
+                    obj.客戶分類 = "南部人";
+                }
+            }
+
+            addItemList();
+
+            return View(items);
+        }
+
+        public void addItemList()
+        {
+            List<ListItem> filter_item = new List<ListItem>();
+
+            ListItem item = new ListItem();
+            item.Text = "天龍人";
+            item.Value = "0";
+
+            filter_item.Add(item);
+
+            ListItem item2 = new ListItem();
+            item2.Text = "南部人";
+            item2.Value = "1";
+
+            filter_item.Add(item2);
+            
+            ViewBag.客戶分類 = new SelectList(filter_item, "0");
         }
 
         // GET: 客戶資料/Details/5
@@ -42,7 +80,7 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            客戶資料 客戶資料 = repo.Find(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -65,8 +103,8 @@ namespace MVC_Homework.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.客戶資料.Add(客戶資料);
-                db.SaveChanges();
+                repo.Add(客戶資料);
+                repo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
 
@@ -80,7 +118,7 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            客戶資料 客戶資料 = repo.Find(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -97,6 +135,7 @@ namespace MVC_Homework.Controllers
         {
             if (ModelState.IsValid)
             {
+                var db = repo.UnitOfWork.Context;
                 db.Entry(客戶資料).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -111,7 +150,7 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            客戶資料 客戶資料 = repo.Find(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -124,9 +163,9 @@ namespace MVC_Homework.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
-            db.客戶資料.Remove(客戶資料);
-            db.SaveChanges();
+            客戶資料 客戶資料 = repo.Find(id);
+            repo.Delete(客戶資料);
+            repo.UnitOfWork.Commit();
             return RedirectToAction("Index");
         }
 
@@ -134,7 +173,7 @@ namespace MVC_Homework.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                repo.UnitOfWork.Context.Dispose();
             }
             base.Dispose(disposing);
         }

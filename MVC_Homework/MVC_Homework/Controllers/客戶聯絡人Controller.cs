@@ -6,23 +6,25 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.UI.WebControls;
 using MVC_Homework.Models;
 
 namespace MVC_Homework.Controllers
 {
     public class 客戶聯絡人Controller : Controller
     {
-        private 客戶資料Entities db = new 客戶資料Entities();
+        //private 客戶資料Entities db = new 客戶資料Entities();
+
+        客戶聯絡人Repository repo = RepositoryHelper.Get客戶聯絡人Repository();
+
+        客戶資料Repository repoII = RepositoryHelper.Get客戶資料Repository();
 
         [HttpPost]
-        public ActionResult Search(string 姓名)
+        public ActionResult Search(string 姓名,string 職稱群組)
         {
-            var 客戶聯絡人Items = db.客戶聯絡人.Where(o => o.是否已刪除 != true).AsQueryable();
-
-            if (!string.IsNullOrEmpty(姓名))
-            {
-                客戶聯絡人Items = 客戶聯絡人Items.Where(o => o.姓名 == 姓名);
-            }
+            var 客戶聯絡人Items = repo.Find(姓名, 職稱群組);
+            
+            addItemList();
 
             return View("Index", 客戶聯絡人Items);
         }
@@ -30,8 +32,53 @@ namespace MVC_Homework.Controllers
         // GET: 客戶聯絡人
         public ActionResult Index()
         {
-            var 客戶聯絡人 = db.客戶聯絡人.Include(客 => 客.客戶資料);
-            return View(客戶聯絡人.Where(o => o.是否已刪除 != true).ToList());
+            var 客戶聯絡人 = repo.All();
+
+            addItemList();
+
+            return View(客戶聯絡人);
+        }
+        public void addItemList()
+        {
+            var 職稱群組 = repo.Get職稱群組();
+
+            List<ListItem> filter_item = new List<ListItem>();
+
+            ListItem item_space = new ListItem();
+
+            item_space.Text = "";
+
+            item_space.Value = "";
+
+            filter_item.Add(item_space);
+
+
+            foreach (var obj in 職稱群組)
+            {
+                ListItem item = new ListItem();
+
+                item.Text = obj.Key;
+
+                item.Value = obj.Key;
+
+                filter_item.Add(item);
+            }
+
+            //List<ListItem> filter_item = new List<ListItem>();
+
+            //ListItem item = new ListItem();
+            //item.Text = "天龍人";
+            //item.Value = "0";
+
+            //filter_item.Add(item);
+
+            //ListItem item2 = new ListItem();
+            //item2.Text = "南部人";
+            //item2.Value = "1";
+
+            //filter_item.Add(item2);
+
+            ViewBag.職稱群組 = new SelectList(filter_item);
         }
 
         // GET: 客戶聯絡人/Details/5
@@ -41,7 +88,9 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+
+            客戶聯絡人 客戶聯絡人 = repo.Find(id.Value);
+
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -52,7 +101,7 @@ namespace MVC_Homework.Controllers
         // GET: 客戶聯絡人/Create
         public ActionResult Create()
         {
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱");
+            ViewBag.客戶Id = new SelectList(repoII.All(), "Id", "客戶名稱");
             return View();
         }
 
@@ -65,12 +114,12 @@ namespace MVC_Homework.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.客戶聯絡人.Add(客戶聯絡人);
-                db.SaveChanges();
+                repo.Add(客戶聯絡人);
+                repo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(repoII.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -81,12 +130,13 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            客戶聯絡人 客戶聯絡人 = repo.Find(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+
+            ViewBag.客戶Id = new SelectList(repoII.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -99,11 +149,14 @@ namespace MVC_Homework.Controllers
         {
             if (ModelState.IsValid)
             {
+                var db = repo.UnitOfWork.Context;
                 db.Entry(客戶聯絡人).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            //ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            
+            ViewBag.客戶Id = new SelectList(repoII.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -114,7 +167,7 @@ namespace MVC_Homework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            客戶聯絡人 客戶聯絡人 = repo.Find(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -127,9 +180,9 @@ namespace MVC_Homework.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
-            db.客戶聯絡人.Remove(客戶聯絡人);
-            db.SaveChanges();
+            客戶聯絡人 客戶聯絡人 = repo.Find(id);
+            repo.Delete(客戶聯絡人);
+            repo.UnitOfWork.Commit();
             return RedirectToAction("Index");
         }
 
@@ -137,7 +190,7 @@ namespace MVC_Homework.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                repo.UnitOfWork.Context.Dispose();
             }
             base.Dispose(disposing);
         }
